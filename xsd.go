@@ -2,13 +2,12 @@ package main
 
 import (
 	"encoding/xml"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"golang.org/x/text/encoding/charmap"
+	"golang.org/x/net/html/charset"
 )
 
 var (
@@ -25,21 +24,12 @@ func parseXSDFile(fname string) ([]xsdSchema, error) {
 	return parse(f, fname)
 }
 
-// makeCharsetReader returns special readers as needed for xml encodings, or
-// nil.
-func makeCharsetReader(charset string, input io.Reader) (io.Reader, error) {
-	if charset == "Windows-1252" {
-		return charmap.Windows1252.NewDecoder().Reader(input), nil
-	}
-	return nil, fmt.Errorf("Unknown charset: %s", charset)
-}
-
 func parse(r io.Reader, fname string) ([]xsdSchema, error) {
 	var schema xsdSchema
 
 	d := xml.NewDecoder(r)
 	// handle special character sets
-	d.CharsetReader = makeCharsetReader
+	d.CharsetReader = charset.NewReaderLabel
 	if err := d.Decode(&schema); err != nil {
 		return nil, err
 	}
